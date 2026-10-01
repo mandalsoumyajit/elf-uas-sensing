@@ -1,0 +1,22 @@
+{
+ "measured": {
+  "P3": 5.1,
+  "PWM": 5.1,
+  "P1": 5.3
+ },
+ "gaussian": {
+  "P3": 0.0,
+  "PWM": 0.0,
+  "P1": 0.0
+ },
+ "note": "measured = grid background, CFAR-normalised 2 s coherent K=4 statistic at Pfa 1.4e-7 (dominated by intermittent narrowband background interferers, not impulses; blanking/clipping do not reduce it); P1 = 40x0.05 s incoherent. gaussian = ideal clutter rejection. Source: review/raw-grid-2026-09-29/detstat_report.py",
+ "clutter_vs_coverage": {
+  "0.00": 5.060787805475526,
+  "0.50": 4.920418493745381,
+  "0.80": 4.46231152343892,
+  "0.90": 4.15556611451583,
+  "0.95": 3.8233369830158512,
+  "0.99": 2.7334836281499553,
+  "1.00": 0.0
+ }
+}
