@@ -59,18 +59,22 @@ def source():
 
 # ------------------------------------------------------------------ 3. noise classes and mitigation
 def noise():
-    fig, ax = B.canvas(7.16, 2.55)
-    rows = [('Local periodic interference\nmains comb from building wiring;\nup to 94% of in-band power', 'Per-node synchronous comb\norder-tracked on the mains phase;\nO(1) cost per sample', 'measured: −17 dB total,\ndrone line ±0.1 dB'),
-            ('Local broadband noise\nnearby electronics; incoherent\nbetween nodes (γ² < 0.03)', 'Witness sensors at the sources\ncoil or current clamp; low\nsensitivity suffices', 'modelled; needs coverage\nof most local power'),
-            ('Distant broadband noise\nsferics, distant grid;\ncoherent over the site', 'Remote reference (Wiener)\nnode-grade sensor needed\nin the VLF band', 'modelled; site coherence\nnot yet measured'),
-            ('Intermittent narrowband lines\nsingle-node, persist > 2 s;\nset the false-alarm threshold', 'CFAR + spatial consistency\ndipole fit across nodes;\nsite line catalogue', 'measured penalty ≈ 5 dB\nat Pfa 10⁻⁷ per cell'),
-            ('Impulsive bursts\nheavy envelope tails\n(Class A, A ≈ 0.003–0.05)', 'Blanking / clipping\nshort-window tracking stage', 'measured: helps short\nwindows only')]
-    h = 0.46
+    H = 1.82
+    fig, ax = B.canvas(7.16, H)
+    rows = [('Local periodic interference\nmains comb from wiring; up to 94% of in-band power', 'Per-node synchronous comb\norder-tracked on the mains phase; O(1) per sample', 'measured: −17 dB total,\ndrone line ±0.1 dB'),
+            ('Local broadband noise\nnearby electronics; incoherent between nodes (γ² < 0.03)', 'Witness sensors at the sources\ncoil or current clamp; low sensitivity suffices', 'modelled; needs coverage\nof most local power'),
+            ('Distant broadband noise\nsferics, distant grid; coherent over the site', 'Remote reference (Wiener)\nnode-grade sensor needed in the VLF band', 'modelled; site coherence\nnot yet measured'),
+            ('Intermittent narrowband lines\nsingle-node, persist > 2 s; set the false-alarm level', 'CFAR + spatial consistency\ndipole fit across nodes; site line catalogue', 'measured penalty ≈ 5 dB\nat Pfa 10⁻⁷ per cell'),
+            ('Impulsive bursts\nheavy envelope tails (Class A, A ≈ 0.003–0.05)', 'Blanking / clipping\nshort-window tracking stage', 'measured: helps short\nwindows only')]
+    cols = ((0.04, 2.45, 'Background class'), (2.82, 2.45, 'Mitigation'), (5.60, 1.52, 'Evidence'))
+    for x, w, t in cols:
+        ax.text(x + w / 2, H - 0.03, t, ha='center', va='top', fontsize=6.6, fontweight='bold', color='0.3')
+    h = 0.29
     for i, (a, b, c) in enumerate(rows):
-        y = 2.02 - i * 0.495
-        ba = box(ax, 0.04, y, 2.35, h, a, 'noise', fs=6.4)
-        bb = box(ax, 2.72, y, 2.35, h, b, 'proc', fs=6.4)
-        bc = box(ax, 5.40, y, 1.72, h, c, 'neutral', fs=6.2, bold_first=False)
+        y = H - 0.18 - h - i * 0.32
+        ba = box(ax, cols[0][0], y, cols[0][1], h, a, 'noise', fs=6.2)
+        bb = box(ax, cols[1][0], y, cols[1][1], h, b, 'proc', fs=6.2)
+        bc = box(ax, cols[2][0], y, cols[2][1], h, c, 'neutral', fs=5.9, bold_first=False)
         arrow(ax, right(ba), left(bb)); arrow(ax, right(bb), left(bc), style='-', lw=0.5)
     B.save(fig, 'diagram_noise')
 
