@@ -1,0 +1,38 @@
+{
+ "method": "Current saved 2 mm geometry; 25 C copper resistance plus 20 mOhm per mating contact; closed-square Neumann L; 2D dielectric C; unchanged full MFB receiver AC/noise rerun. Barrel/pin bulk resistance and AC conductor losses excluded.",
+ "models": [
+  {
+   "turns": 48,
+   "R": 35.38635977293991,
+   "L": 0.003618255920271498,
+   "C": 1.394121814758986e-09,
+   "area": 17.466032107200004,
+   "gain_1k": 75.16288867998202,
+   "noise_emf_nV": 1.420450392777852,
+   "noise_field_fT": 12.943506575498974,
+   "screening_resonance_kHz": 70.86309710820278
+  },
+  {
+   "turns": 56,
+   "R": 41.28238252918963,
+   "L": 0.004704300719788635,
+   "C": 1.634271415279431e-09,
+   "area": 20.377037458400004,
+   "gain_1k": 75.27246793807386,
+   "noise_emf_nV": 1.4540594478003743,
+   "noise_field_fT": 11.356937883603047,
+   "screening_resonance_kHz": 57.399816146629476
+  },
+  {
+   "turns": 100,
+   "R": 73.71050768856308,
+   "L": 0.012371902894784091,
+   "C": 2.955481682387475e-09,
+   "area": 36.38756689,
+   "gain_1k": 76.25499491925981,
+   "noise_emf_nV": 1.6258741663459553,
+   "noise_field_fT": 7.1113826104841085,
+   "screening_resonance_kHz": 26.320112686295314
+  }
+ ]
+}

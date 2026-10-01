@@ -15,11 +15,12 @@ The paper studies passive reception of the quasi-static magnetic fields that sma
 | `range_budget/` | Link-budget detection-range model (`range_budget.py`), cancellation and near-field-phase calculations | V |
 | `grid_analysis/` | Processing of the four-loop grid recordings: MATLAB export (`export_raw.m`), spectra and maps, background statistics (`env_*.py`, `classA_fit.py`, `detstat_*.py`), synchronous comb (`sync_comb.py`, `periodic_cancel.py`), phase-referenced coherent integration (`ref_tracking.py`, `crosstalk_test.py`, `joint_tracking.py`), held-out-cell localization (`raw_localize.py`, `complex_amps.py`, `fit_position*.py`) | III, IV |
 | `vector_sim/` | Vector-node simulations: point-rotor forward model, features, estimators, the original studies 1–9, and the measurement-informed studies 10–12 (`realistic_model.py`, `study10_*`, `study11_*`, `study12_*`) | VI |
+| `vlf_receiver/` | LTspice simulations of the ELF and VLF node receivers: coil model, VLF damping and noise, cost of co-locating the windings. Needs LTspice and three vendor device models that are not included (see `vlf_receiver/README.md`) | VIII |
 | `figures/` | Block diagrams and data figures (`fig_diagrams.py`, `fig_experiment.py`, `fig_models.py`) | all |
 
 ## Requirements
 
-Python 3.12 with the packages in `requirements.txt`. MATLAB is needed only for `grid_analysis/export_raw.m`, which converts the original `timeseries` recordings to plain arrays.
+Python 3.12 with the packages in `requirements.txt`. MATLAB is needed only for `grid_analysis/export_raw.m`, which converts the original `timeseries` recordings to plain arrays. LTspice is needed only for `vlf_receiver/`.
 
 ```
 pip install -r requirements.txt
