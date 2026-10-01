@@ -19,8 +19,8 @@ def ranges():
     classes = ['micro (sub-250 g, 3", 4S)', '5-inch FPV (6S)', 'photo/mid (11" props, 4S)', 'heavy-lift (30" props, 12S)']
     short = ['micro\n<250 g', '5-inch\nFPV', 'photo\n11"', 'heavy-lift\n30"']
     scen = [('quiet outdoor', 'quiet outdoor'), ('semi-urban outdoor', 'semi-urban'), ('indoor lab', 'indoor (measured)'), ('indoor near electronics', 'indoor, near electronics')]
-    fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.55), sharey=True, gridspec_kw=dict(wspace=0.08))
-    for ax, band, title in zip(axs, ['current (<=10 kHz)', 'wideband'], ['(a) receiver band ≤ 10 kHz (present hardware)', '(b) wideband receiver (incl. 16–85 kHz PWM lines)']):
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.0), sharey=True, gridspec_kw=dict(wspace=0.1))
+    for ax, band, title in zip(axs, ['current (<=10 kHz)', 'wideband'], ['(a) band ≤ 10 kHz (present hardware)', '(b) wideband (incl. PWM lines)']):
         x = np.arange(4)
         for k, (s, lab) in enumerate(scen):
             xs = x + (k - 1.5) * 0.19
@@ -31,15 +31,32 @@ def ranges():
                             fmt=mk, ms=3.3, color=C4[k], mfc=fill, lw=0.8, capsize=1.3, label=lab if mode != '0.2 s' else None)
         ax.set_yscale('log'); ax.set_ylim(0.2, 80); ax.set_xticks(x); ax.set_xticklabels(short)
         ax.grid(alpha=0.3, which='major', axis='y'); tag(ax, title); ax.spines[['top', 'right']].set_visible(False)
-    axs[0].set_ylabel('detection range (m), P$_d$ = 0.9'); axs[0].legend(fontsize=6.2, loc='upper left', ncol=2)
-    axs[1].text(0.98, 0.03, 'open circles: 0.2 s snapshot\nfilled squares: 60 s tracked, coherent', transform=axs[1].transAxes, ha='right', va='bottom', fontsize=6.2)
+    axs[0].set_ylabel('detection range (m), P$_d$ = 0.9')
+    env_handles, env_labels = axs[0].get_legend_handles_labels()
+    axs[1].text(0.98, 0.03, 'open: 0.2 s snapshot\nfilled: 60 s tracked, coherent', transform=axs[1].transAxes, ha='right', va='bottom', fontsize=5.6)
+    # (c) range vs integration time, 5-inch FPV, wideband, nominal moment (range_by_class definitions)
+    rbc = os.path.join(SM, 'range_by_class.py')
+    sys.path.insert(0, os.path.join(B.ROOT, 'range_budget'))
+    ns = {'__file__': rbc}; exec(open(rbc).read().split('R = json.load')[0], ns)
+    lines = json.load(open(os.path.join(SM, 'drone_source_results.json')))['5-inch FPV (6S)']['lines']
+    TT = np.logspace(-1, np.log10(300), 40); ax = axs[2]
+    for k, (s, lab) in enumerate(scen):
+        nf = ns['SCEN'][s]
+        for Tc_of, ls in ((lambda T: T, '-'), (lambda T: min(T, 0.1), '--')):
+            r = [max(ns['max_range'](L['m'][1], np.hypot(nf(L['f']), ns['wire_loop_noise'](L['f'])[0]), T, Tc_of(T)) for L in lines) for T in TT]
+            ax.plot(TT, r, ls, color=C4[k], lw=1.0)
+    ax.plot([], [], 'k-', lw=1.0, label='tracked, coherent'); ax.plot([], [], 'k--', lw=1.0, label='untracked (0.1 s coherent)')
+    ax.set_xscale('log'); ax.set_xlabel('integration time T (s)'); ax.grid(alpha=0.3, which='major', axis='y')
+    ax.add_artist(ax.legend(fontsize=5.6, loc='upper left'))
+    ax.legend(env_handles, env_labels, fontsize=5.6, loc='lower right', handletextpad=0.2)
+    ax.spines[['top', 'right']].set_visible(False); tag(ax, '(c) 5-inch FPV, wideband, vs T')
     B.save(fig, 'model_range')
 
 def array():
     cur = json.load(open(os.path.join(SM, 'array_model_curtain.json')))
     site = json.load(open(os.path.join(SM, 'site_model.json')))
     wit = json.load(open(os.path.join(SM, 'site_witness.json')))
-    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.4), gridspec_kw=dict(wspace=0.38, width_ratios=[1, 1, 1.15]))
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 1.95), gridspec_kw=dict(wspace=0.38, width_ratios=[1, 1, 1.15]))
     ax = axs[0]
     sty = {('P3', False): ('ELF, single-axis', C4[0], '--'), ('P3', True): ('ELF, triaxial', C4[0], '-'),
            ('PWM', False): ('PWM, single-axis', C4[2], '--'), ('PWM', True): ('PWM, triaxial', C4[2], '-')}
@@ -67,14 +84,15 @@ def array():
         v = [next(r for r in wit if r['kind'] == 'canyon' and r['config'] == c and r['case'] == case and r['proc'] == proc and r['B'] == 8)['res']['3-9'][1] for c, _ in cfgs]
         ax.bar(x + (j - 1) * w, v, w, color=col, label=lab)
     ax.set_xticks(x); ax.set_xticklabels([l for _, l in cfgs], rotation=30, ha='right', fontsize=6.2)
-    ax.set_ylim(0, 1.05); ax.set_ylabel('P(detected within 50 m)'); ax.legend(fontsize=5.6, loc='upper left')
+    ax.set_ylim(0, 1.42); ax.set_yticks([0, 0.25, 0.5, 0.75, 1]); ax.set_ylabel('P(detected within 50 m)')
+    ax.legend(fontsize=5.4, loc='upper left', ncol=2, columnspacing=0.6, handlelength=1.0, handletextpad=0.3)
     tag(ax, '(c) street canyon, 8 nodes/100 m')
     B.save(fig, 'model_array')
 
 def simulation():
     inc = json.load(open(os.path.join(SIM, 'inclination.json'))); pos = json.load(open(os.path.join(SIM, 'position.json')))
     lv = [('quiet outdoor (0.02 pT)', '0.02 pT'), ('after cancellation (0.3 pT)', '0.3 pT'), ('indoor / semi-urban (1 pT)', '1 pT'), ('noisy indoor (10 pT)', '10 pT')]
-    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.6), gridspec_kw=dict(wspace=0.36))
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.15), gridspec_kw=dict(wspace=0.36))
     rb = np.array(inc['range_bins_m']).mean(1)
     for ax, T in zip(axs[:2], (0.2, 1.0)):
         for k, (key, lab) in enumerate(lv[:3]):
@@ -99,7 +117,7 @@ def simulation():
     ax.set_yscale('log'); ax.set_ylim(1e-3, 3e4); ax.set_xticks(x); ax.set_xticklabels([l for _, l in lv], fontsize=6.3)
     ax.set_xlabel('background ASD at 1.1 kHz'); ax.set_ylabel('median position error, T = 1 s (m)'); ax.legend(fontsize=5.2, loc='upper left', ncol=1, handlelength=1.2)
     tag(ax, '(c) four nodes, 5 m square')
-    fig.subplots_adjust(bottom=0.27)
+    fig.subplots_adjust(bottom=0.31)
     B.save(fig, 'sim_results')
 
 if __name__ == '__main__':

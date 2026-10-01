@@ -82,7 +82,7 @@ def node(ax, x, z, kind):
 def deploy():
     import plotstyle
     plotstyle.apply()
-    fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.35), gridspec_kw=dict(width_ratios=[1.25, 1]))
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.05), gridspec_kw=dict(width_ratios=[1.3, 0.9, 1.05]))
     ax = axs[0]
     ax.axhline(0, color='k', lw=0.8)
     ax.add_patch(Rectangle((-0.3, 0), 0.6, 4, fc='0.75', ec='none'))                  # fence / wall
@@ -117,11 +117,31 @@ def deploy():
     ax.text(-16, 9, 'h = 9–24 m', ha='center', fontsize=6, rotation=90)
     ax.set_xlim(-23, 23); ax.set_ylim(-1, 42); ax.set_xlabel('across the street (m)'); ax.set_ylabel('height (m)')
     ax.set_title('(b) Street canyon (cross-section)', loc='left'); ax.spines[['top', 'right']].set_visible(False)
+    # (c) plan view: the two node types scattered independently over a site
+    ax = axs[2]
+    ax.add_patch(Rectangle((0, 0), 120, 80, fc='none', ec='0.35', lw=0.9))                          # perimeter fence
+    ax.add_patch(Rectangle((62, 36), 36, 30, fc='#e5e5e5', ec='0.5', lw=0.6)); ax.text(80, 51, 'building', ha='center', va='center', fontsize=5.8)
+    ax.add_patch(Rectangle((14, 44), 22, 18, fc='#e5e5e5', ec='0.5', lw=0.6))
+    ax.plot([52, 64], [0, 0], color='white', lw=2.2, solid_capstyle='butt'); ax.text(58, 4, 'gate', ha='center', fontsize=5.6)
+    per = [(x, -4) for x in np.arange(0, 121, 15)] + [(x, 84) for x in np.arange(0, 121, 15)] + \
+          [(-4, y) for y in np.arange(15, 80, 15)] + [(124, y) for y in np.arange(15, 80, 15)]
+    vlf = per + [(25, 63), (80, 67), (40, 30), (85, 22)]                                              # perimeter + rooftops/poles inside
+    elf = [(44, 7), (72, 7), (70, 42), (90, 60), (25, 40)]                                            # gate, indoors, loading area
+    ax.plot(*zip(*vlf), 'o', ms=3.2, mfc='white', mec='#b03a2e', mew=0.9, ls='', label='VLF node (PWM band)')
+    ax.plot(*zip(*elf), 's', ms=3.2, color='k', ls='', label='ELF node (motor band)')
+    xs = np.linspace(-14, 105, 40); ax.plot(xs, 98 - 0.9 * (xs + 14), '--', color='#7d3c98', lw=0.9, label='drone track')
+    ax.annotate('', (100, 4), (93, 11), arrowprops=dict(arrowstyle='-|>', color='#7d3c98', lw=0.9))
+    ax.text(60, -14, '~15 m VLF pitch along the fence', fontsize=5.6, ha='center', color='#b03a2e')
+    ax.set_xlim(-16, 136); ax.set_ylim(-20, 106); ax.set_aspect('equal'); ax.set_xlabel('x (m)'); ax.set_ylabel('y (m)')
+    hc, lc = ax.get_legend_handles_labels()
+    fig.legend(hc, ['VLF node', 'ELF node', 'drone track'], loc='lower center', ncol=3, fontsize=6.2, bbox_to_anchor=(0.86, -0.02),
+               handletextpad=0.3, columnspacing=0.8)
+    ax.set_title('(c) Plan view: two node types', loc='left'); ax.spines[['top', 'right']].set_visible(False)
     hs = [plt.Line2D([], [], ls='', marker=m, color=c, mec='k', mew=0.4, ms=4.2, label=l) for m, c, l in
           (('v', '#555555', 'ground 1.5 m'), ('o', '#2874a6', 'pole / streetlight'), ('D', '#1e8449', 'facade'),
            ('s', '#c0392b', 'rooftop'), ('^', '#c0662b', 'tower'))]
-    fig.legend(handles=hs, loc='lower center', ncol=5, fontsize=6.5, bbox_to_anchor=(0.5, -0.02))
-    fig.tight_layout(rect=(0, 0.07, 1, 1)); B.save(fig, 'diagram_deployment')
+    fig.legend(handles=hs, loc='lower center', ncol=5, fontsize=6.2, bbox_to_anchor=(0.34, -0.02), columnspacing=1.0)
+    fig.tight_layout(rect=(0, 0.08, 1, 1)); B.save(fig, 'diagram_deployment')
 
 # ------------------------------------------------------------------ 5. simulation chain (Section VI)
 def simchain():

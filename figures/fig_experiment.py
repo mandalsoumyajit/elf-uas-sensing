@@ -25,7 +25,7 @@ def tag(ax, s):
 def signature():
     P = np.load(os.path.join(G, 'raw_psd.npz')); names, psd, f = list(P['names']), P['psd'], P['f']
     A = np.load(os.path.join(G, 'complex_amps.npy'), allow_pickle=True).item()
-    fig = plt.figure(figsize=(7.16, 2.45))
+    fig = plt.figure(figsize=(7.16, 1.95))
     gs = fig.add_gridspec(1, 3, width_ratios=[0.8, 1.35, 1.05], wspace=0.38)
     ax = fig.add_subplot(gs[0])
     for c in range(1, 26):
@@ -78,7 +78,7 @@ def comb_example():
 
 def background():
     P = np.load(os.path.join(G, 'raw_psd.npz')); names, psd, f = list(P['names']), P['psd'], P['f']
-    fig, axs = plt.subplots(1, 4, figsize=(7.16, 2.25), gridspec_kw=dict(wspace=0.5))
+    fig, axs = plt.subplots(1, 4, figsize=(7.16, 1.8), gridspec_kw=dict(wspace=0.5))
     ax = axs[0]
     harm = np.zeros_like(f, bool)
     for k in range(1, 200):
@@ -127,20 +127,49 @@ def background():
     B.save(fig, 'exp_background')
 
 # ------------------------------------------------------------------ Fig: coherent integration
+WANDER = {1: 'A', 25: 'C'}
+
+def wander_tracks():
+    """strongest-motor-line frequency track on the nearest antenna (same STFT ridge as grid_analysis/wander_stats.py)."""
+    cache = os.path.join(B.HERE, 'wander_tracks.npz')
+    if not os.path.exists(cache):
+        import scipy.io as sio
+        from scipy.signal import stft
+        A = np.load(os.path.join(G, 'complex_amps.npy'), allow_pickle=True).item(); out = {}
+        for c, ch in WANDER.items():
+            x = sio.loadmat(os.path.join(EXP, f'c{c:02d}_{ch}.mat'))['x'].ravel().astype(float); x -= x.mean()
+            fc = float(A[c]['fc'])
+            f, t, Z = stft(x, fs=20000.0, nperseg=2000, noverlap=1500, nfft=16000)
+            sel = np.abs(f - fc) < 80; P = np.abs(Z[sel]) ** 2; fs_ = f[sel]
+            i = np.clip(P.argmax(0), 1, sel.sum() - 2); j = np.arange(P.shape[1])
+            a, b, cc = np.log(P[i - 1, j] + 1e-30), np.log(P[i, j] + 1e-30), np.log(P[i + 1, j] + 1e-30)
+            out[f't{c}'] = t; out[f'f{c}'] = fs_[i] + 0.5 * (a - cc) / (a - 2 * b + cc) * (fs_[1] - fs_[0])
+        np.savez(cache, **out)
+    return np.load(cache)
+
 def coherent():
     R = np.load(os.path.join(G, 'ref_tracking_results.npy'), allow_pickle=True)
     X = np.load(os.path.join(G, 'crosstalk_rows.npy'), allow_pickle=True)
-    fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.35), gridspec_kw=dict(wspace=0.32))
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 1.95), gridspec_kw=dict(wspace=0.42, width_ratios=[1, 1, 1.05]))
+    ax = axs[2]
+    W = wander_tracks()
+    for c, col in ((1, COL['A']), (25, COL['C'])):
+        t, fr = W[f't{c}'], W[f'f{c}']; m = (t >= 5) & (t <= 35)
+        ax.plot(t[m] - 5, fr[m] - np.median(fr[m]), color=col, lw=0.7, label=f'cell {c}, antenna {WANDER[c]}')
+    ax.axhspan(-0.5, 0.5, color='0.55', zorder=0)
+    h, l = ax.get_legend_handles_labels(); h.append(Rectangle((0, 0), 1, 1, fc='0.55')); l.append('1 s FFT bin')
+    ax.set_xlim(0, 30); ax.set_ylim(-60, 125); ax.set_xlabel('time (s)'); ax.set_ylabel('motor-line offset (Hz)')
+    ax.legend(h, l, fontsize=5.6, loc='upper left', ncol=2, columnspacing=0.8, handlelength=1.4); tag(ax, '(c) motor-line wander')
     ax = axs[0]
     for c, ref, tgt, dd, Rc, d in R:
         if c == 13:
             continue
         T = sorted(d)
         ax.plot(T, [d[t]['coh'] for t in T], '-o', ms=2.2, lw=0.9, color=COL['A'] if dd < 5 else COL['C'], alpha=0.85)
-    tt = np.array([1, 300]); ax.plot(tt, 7 + 10 * np.log10(tt), 'k--', lw=0.7); ax.text(15, 21.5, '10 dB/decade', rotation=24, fontsize=6.3)
+    tt = np.array([1, 300]); ax.plot(tt, 7 + 10 * np.log10(tt), 'k--', lw=0.7); ax.text(280, 1.0, 'dashed: 10 dB/decade', ha='right', fontsize=5.8)
     ax.plot([], [], '-o', color=COL['A'], ms=2.2, label='far node at 4.6 m'); ax.plot([], [], '-o', color=COL['C'], ms=2.2, label='far node at 6.5 m')
     ax.axhline(0, color='0.7', lw=0.6); ax.set_xscale('log'); ax.set_xlabel('integration time T (s)'); ax.set_ylabel('line SNR at far node (dB)')
-    ax.legend(fontsize=6.3, loc='upper left'); tag(ax, '(a) phase-referenced coherent integration')
+    ax.legend(fontsize=5.8, loc='upper left'); tag(ax, '(a) phase-referenced integration')
     ax = axs[1]
     Rr = np.array([x[0] for x in X]); Tt = np.array([x[1] for x in X])
     lr = np.log10(np.array([x[4] / x[3] for x in X])); h = np.array([x[5] for x in X]); snr = np.array([x[6] for x in X])
@@ -155,7 +184,7 @@ def coherent():
     ax.plot(xx, -20 * coef[0] * xx, 'k-', lw=0.9, label=f'field: |H| $\\propto$ (r$_t$/r$_r$)$^{{-{coef[0]:.2f}}}$')
     ax.plot(xx, 0 * xx, color='0.5', ls='--', lw=0.9, label='electrical crosstalk (flat)')
     ax.set_xlabel('log$_{10}$(r$_{target}$ / r$_{reference}$)'); ax.set_ylabel('20 log|H| \u2212 pair gain (dB)')
-    ax.legend(fontsize=6.3); tag(ax, '(b) coherent component follows geometry')
+    ax.legend(fontsize=5.8); tag(ax, '(b) coherent part follows geometry')
     B.save(fig, 'exp_coherent'); print('crosstalk exponent', coef[0])
 
 # ------------------------------------------------------------------ Fig: localization
@@ -163,7 +192,7 @@ def localization():
     R = np.load(os.path.join(G, 'fit_position_results.npy'), allow_pickle=True).item()['results']
     d = np.load(os.path.join(G, 'raw_localize.npz'))
     e4 = np.linalg.norm(d['pred_phys'] - d['xy'][d['y'] - 1], axis=1)
-    fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.3), gridspec_kw=dict(width_ratios=[1.2, 1.2, 0.95], wspace=0.38))
+    fig, axs = plt.subplots(1, 3, figsize=(7.16, 1.9), gridspec_kw=dict(width_ratios=[1.2, 1.2, 0.95], wspace=0.38))
     curves = [('band power, empirical decay', None, '0.5', '-'), ('|line amplitude|, power law', 'V1', '#9e9ac8', '--'),
               ('|line amplitude|, dipole + loops', 'V2m', '#6baed6', '-.'), ('complex amplitude, dipole + loops', 'V2', COL['C'], '-')]
     inner = [7, 8, 9, 12, 13, 14, 17, 18, 19]
