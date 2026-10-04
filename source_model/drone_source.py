@@ -48,9 +48,14 @@ CLASSES = {
 }
 # Generic uncertain factors, (low, nominal, high)
 MAG_BR = 1.3                                  # NdFeB remanence (T)
-ROTOR_IMBALANCE = (0.01, 0.03, 0.10)          # residual rotating dipole / (m_magnet * sqrt(N_mag))
-BELL_SHIELD = (0.3, 0.6, 1.0)                 # steel rotor-bell reduction of the residual dipole
-SIXSTEP_HARM = {'roll': (2.0, 1.5, 1.0)}      # harmonic amplitude ~ I1 / n^roll (6k+-1); low = steeper roll-off
+# Residual rotating dipole / (m_magnet * sqrt(N_mag)), including steel rotor-bell shielding. Calibrated on the grid
+# recordings with the documented front end (review/FRONTEND_CALIBRATION_2026-10-04.md): no f_m line within 0.85 m
+# of three antennas and 4.7 pT rms at 1.7 m on one, i.e. ~1.7-2.5e-4 A m^2 for the 5-inch class (a-priori factor
+# was 0.003 / 0.018 / 0.1, i.e. 3.6e-3 A m^2 nominal, contradicted by >10x).
+ROTOR_RESIDUAL = (3e-4, 1e-3, 2e-3)
+# Six-step 6k+-1 harmonics ~ I1 / n^roll. Calibrated 5th/1st and 7th/1st field ratios on three antennas are -9..+2 dB
+# and -18..-9 dB (a-priori roll 2.0 / 1.5 / 1.0 gave -21 and -25 dB nominal); low = steeper roll-off.
+SIXSTEP_HARM = {'roll': (1.0, 0.6, 0.3)}
 FOC_THD = (0.01, 0.03, 0.05)                  # residual 5th/7th fraction under FOC
 RIPPLE_6FE = (0.05, 0.15, 0.30)               # DC-bus 6f_e ripple / I_dc (six-step)
 BUS_PWM_FRAC = (0.005, 0.02, 0.08)            # PWM ripple reaching the DC leads / chopped amplitude
@@ -90,7 +95,7 @@ def lines_for(c):
     w_arc = np.pi * (c['stator_d_mm'] + 2) / c['n_mag'] * 0.8 * 1e-3
     v_mag = w_arc * (c['stator_h_mm'] + 1) * 1e-3 * c['mag_t_mm'] * 1e-3
     m_mag = MAG_BR / MU0 * v_mag
-    L.append((fm, 'rotor residual', TRIPLET(lambda i: ROTOR_IMBALANCE[i] * BELL_SHIELD[i] * m_mag * np.sqrt(c['n_mag'])), 'rotating'))
+    L.append((fm, 'rotor residual', TRIPLET(lambda i: ROTOR_RESIDUAL[i] * m_mag * np.sqrt(c['n_mag'])), 'rotating'))
     # phase leads: three-conductor ribbon, net moment L*pitch*sqrt(3)*I_n
     area = TRIPLET(lambda i: c['lead_len_m'][i] * c['lead_pitch_m'][i] * LEAD_TWIST[i])
     L.append((fe, 'phase leads', TRIPLET(lambda i: area[i] * np.sqrt(3) * op['I1']), 'linear'))
@@ -124,7 +129,7 @@ def b_at(m, r=1.0):
     return np.sqrt(2 / 3) * 1e-7 * m / r ** 3
 
 if __name__ == '__main__':
-    sys.path.insert(0, os.path.join(HERE, '..', 'range_budget'))
+    sys.path.insert(0, os.path.join(HERE, '..', 'review', 'range-budget-2026-09-27'))
     from range_budget import max_range, wire_loop_noise
     out = {}
     print('Equivalent-source drone ELF/VLF model, step 1 (per motor; lo / nominal / hi)')

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import blocks as B
 import plotstyle
 
-SM = os.path.join(B.ROOT, 'source_model'); SIM = os.path.join(B.ROOT, 'vector_sim', 'simulation_results', 'v6_realistic')
+SM = os.path.join(B.ROOT, 'source_model'); SIM = os.path.join(B.ROOT, 'vector_sim', 'simulation_results', 'v7_calibrated')
 plotstyle.apply()
 C4 = ['#2874a6', '#1e8449', '#c0392b', '#c0662b', '#7d3c98', '#555555']
 
@@ -91,14 +91,14 @@ def array():
 
 def simulation():
     inc = json.load(open(os.path.join(SIM, 'inclination.json'))); pos = json.load(open(os.path.join(SIM, 'position.json')))
-    lv = [('quiet outdoor (0.02 pT)', '0.02 pT'), ('after cancellation (0.3 pT)', '0.3 pT'), ('indoor / semi-urban (1 pT)', '1 pT'), ('noisy indoor (10 pT)', '10 pT')]
+    lv = [('quiet outdoor (0.02 pT)', '0.02 pT'), ('measured indoor (0.2 pT)', '0.2 pT'), ('semi-urban (1 pT)', '1 pT'), ('near electronics (10 pT)', '10 pT')]
     fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.15), gridspec_kw=dict(wspace=0.36))
     rb = np.array(inc['range_bins_m']).mean(1)
     for ax, T in zip(axs[:2], (0.2, 1.0)):
         for k, (key, lab) in enumerate(lv[:3]):
             ax.plot(rb, inc[f'T={T}|{key}|resolved']['rmse_by_range'], '-o', ms=2.5, color=C4[k], lw=1.0, label=f'vector, tone-resolved, {lab}')
             ax.plot(rb, inc[f'T={T}|{key}|compact']['rmse_by_range'], '--', color=C4[k], lw=0.8)
-        ax.plot(rb, inc[f'T={T}|indoor / semi-urban (1 pT)|z']['rmse_by_range'], ':', color='k', lw=1.0, label='single loop (any level)')
+        ax.plot(rb, inc[f'T={T}|semi-urban (1 pT)|z']['rmse_by_range'], ':', color='k', lw=1.0, label='single loop (any level)')
         ax.axhline(inc[f'T={T}|mean_predictor'], color='0.6', lw=0.6)
         ax.set_ylim(0, 14); ax.set_xlabel('horizontal range (m)'); ax.set_ylabel('inclination RMSE (deg)')
         tag(ax, f'({"a" if T == 0.2 else "b"}) one vector node, T = {T:g} s')

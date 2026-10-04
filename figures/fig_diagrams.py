@@ -44,8 +44,8 @@ def source():
         arrow(ax, right(b), left(b3), lw=0.6)
     arrow(ax, right(b3), left(b4))
     sx = fig.add_axes([0.10, 0.09, 0.86, 0.24])
-    lines = [(153, 3.6e-3, 'rotor residual, fₘ'), (1074, 1.06e-3, 'phase leads, fₑ'), (5372, 9.5e-5, '5fₑ'), (6446, 1.1e-4, '6fₑ (bus)'),
-             (7520, 5.7e-5, '7fₑ'), (24000, 4.6e-4, 'PWM carrier, f_pwm')]
+    lines = [(153, 2.0e-4, 'rotor residual, fₘ'), (1074, 1.06e-3, 'phase leads, fₑ'), (5372, 4.0e-4, '5fₑ'), (6446, 1.1e-4, '6fₑ'),
+             (7520, 3.3e-4, '7fₑ'), (24000, 4.6e-4, 'PWM carrier, f_pwm')]
     for f, m, lab in lines:
         sx.vlines(f, 1e-5, m, color=B.EDGE['src'], lw=1.2); sx.plot(f, m, 'o', ms=3, color=B.EDGE['src'])
         dx = {'5fₑ': 0.84, '7fₑ': 1.16}.get(lab, 1.0)

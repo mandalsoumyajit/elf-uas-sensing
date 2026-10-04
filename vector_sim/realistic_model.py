@@ -1,4 +1,8 @@
-"""Measurement-informed source and noise models for the vector-node simulations (v6).
+"""Measurement-informed source and noise models for the vector-node simulations (v7: front-end calibrated).
+
+v7 (2026-10-04) uses the grid data referred to field through the documented analog front end
+(review/FRONTEND_CALIBRATION_2026-10-04.md): harmonic ratios, rotor residual and noise shape below replace the v6
+values (5th/7th at -21/-25 dB, rotor residual 3.6e-3 A m^2, noise slope f^-1.3), which assumed a flat gain.
 
 Source (5-inch FPV class; drone_source.py nominal, calibrated where the grid data allow):
   - four motors, arm 0.11 m, 7 pole pairs, hover f_e = 1074 Hz (drone_source), per-motor speed offsets
@@ -7,11 +11,12 @@ Source (5-inch FPV class; drone_source.py nominal, calibrated where the grid dat
     (measured on the grid data: sd 9-28 Hz, tau 1.2-9.5 s, rms change 2.5-14 Hz over 0.2 s)
   - at f_e: body-axial linear moment m_a = 1.06e-3 A m^2 (phase-lead loop, drone_source nominal) and a
     rotating transverse moment m_r = m_a / 1.44 (measured median axial/rotating ratio, grid V2 fit)
-  - 5th and 7th harmonics of the axial term at -21 and -25 dB (six-step 6k+-1, drone_source / grid)
-  - rotor residual rotating at f_mech, 3.6e-3 A m^2 (drone_source nominal)
+  - 5th and 7th harmonics of the axial term at -8.4 and -10.1 dB (drone_source nominal, calibrated on the grid:
+    measured 5th/1st -9..+2 dB, 7th/1st -18..-9 dB on three antennas)
+  - rotor residual rotating at f_mech, 2.0e-4 A m^2 (drone_source nominal; grid bound ~1.7-2.5e-4 A m^2)
 Noise (per node and axis, mutually independent: measured inter-antenna coherence <~0.03):
-  - coloured Gaussian background with ASD n(f) = level * (f/1100)^-1.3 (indoor shape, grid data), front-end
-    high-pass at 300 Hz; level = ASD at 1.1 kHz
+  - coloured Gaussian background with ASD n(f) = level * max((f/1100)^-0.6, 0.55) (calibrated indoor shape:
+    f^-0.6 to ~3 kHz, flat above), front-end high-pass at 300 Hz; level = ASD at 1.1 kHz
   - residual mains comb (50.05 Hz harmonics) after the synchronous comb: each harmonic +10 dB above the
     floor in a 1 Hz bin
   - impulsive bursts (Class A-like): Poisson 15 /s, 0.5 ms Gaussian-windowed bursts, Gamma = 10
@@ -35,8 +40,8 @@ class Src:
     spin = np.array([1, -1, 1, -1])
     m_axial = 1.06e-3
     beta = 1.44
-    harm = {5: 10 ** (-21 / 20), 7: 10 ** (-25 / 20)}
-    m_rotor = 3.6e-3
+    harm = {5: 10 ** (-8.4 / 20), 7: 10 ** (-10.1 / 20)}
+    m_rotor = 2.0e-4
     wander = ((15.0, 3.5), (5.0, 0.1))
 
     @property
@@ -97,7 +102,7 @@ def simulate(pos, att, nodes, T, rng, src=None, fs=FS, scale=None):
 
 def asd(f, level):
     f = np.maximum(np.asarray(f, float), 1.0)
-    return level * (f / 1100.0) ** -1.3 / np.sqrt(1 + (300.0 / f) ** 4)
+    return level * np.maximum((f / 1100.0) ** -0.6, 0.55) / np.sqrt(1 + (300.0 / f) ** 4)
 
 
 def noise(shape, level, rng, fs=FS, mains=True, impulsive=True, gamma=10.0, rate=15.0):

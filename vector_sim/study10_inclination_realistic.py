@@ -9,7 +9,7 @@ Features (all computed from the same noisy record):
              if any motor fails the measured tracking threshold the record falls back to the training mean)
   z loop   : single-loop log power in the band;  total : three-axis log power
 Training is matched to each condition (noisy records, same level and T, ranges U[1, 4] m); MLP from
-simulation_utils, 3 training repeats.  Output: simulation_results/v6_realistic/inclination.json
+simulation_utils, 3 training repeats.  Output: simulation_results/v7_calibrated/inclination.json
 """
 import json, os, sys
 from pathlib import Path
@@ -20,9 +20,9 @@ import realistic_model as RM
 from features import bandpass, covariance_features, log_power
 from simulation_utils import make_model, save_json, provenance
 
-OUT = Path('simulation_results/v6_realistic'); OUT.mkdir(parents=True, exist_ok=True)
-LEVELS = {'quiet outdoor (0.02 pT)': 0.02e-12, 'after cancellation (0.3 pT)': 0.3e-12,
-          'indoor / semi-urban (1 pT)': 1e-12, 'noisy indoor (10 pT)': 10e-12}
+OUT = Path('simulation_results/v7_calibrated'); OUT.mkdir(parents=True, exist_ok=True)
+LEVELS = {'quiet outdoor (0.02 pT)': 0.02e-12, 'measured indoor (0.2 pT)': 0.2e-12,
+          'semi-urban (1 pT)': 1e-12, 'near electronics (10 pT)': 10e-12}
 TS = (0.2, 1.0)
 NODE = np.zeros((1, 3))
 SRC = RM.Src()

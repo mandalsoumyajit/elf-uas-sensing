@@ -11,7 +11,7 @@ tracking threshold are dropped; a window with none is a failure).  Two estimator
   free   : attitude-free - each motor's complex moment vector is unknown (3 complex), all motors share the
            drone-centre position (rotor offsets ignored -> 0.11 m model error); variable projection
 CRLB for the attitude-free model (triaxial and scalar) at the true pose.
-Output: simulation_results/v6_realistic/position.json
+Output: simulation_results/v7_calibrated/position.json
 """
 from pathlib import Path
 import numpy as np
@@ -22,12 +22,12 @@ import realistic_model as RM
 from forward_model import R_body_to_world, dipole_tensor
 from simulation_utils import save_json, provenance
 
-OUT = Path('simulation_results/v6_realistic'); OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path('simulation_results/v7_calibrated'); OUT.mkdir(parents=True, exist_ok=True)
 NODES = np.array([[-0.1, -0.1, 1.0], [5.1, -0.1, 1.0], [5.1, 5.1, 1.0], [-0.1, 5.1, 1.0]])
 CTR = np.array([2.5, 2.5, 1.0])
 NRM = (CTR - NODES) * np.array([1, 1, 0]); NRM /= np.linalg.norm(NRM, axis=1, keepdims=True)
-LEVELS = {'quiet outdoor (0.02 pT)': 0.02e-12, 'after cancellation (0.3 pT)': 0.3e-12,
-          'indoor / semi-urban (1 pT)': 1e-12, 'noisy indoor (10 pT)': 10e-12}
+LEVELS = {'quiet outdoor (0.02 pT)': 0.02e-12, 'measured indoor (0.2 pT)': 0.2e-12,
+          'semi-urban (1 pT)': 1e-12, 'near electronics (10 pT)': 10e-12}
 TS = (0.2, 1.0)
 LO, HI = np.array([0.0, 0.0, 0.25]), np.array([5.0, 5.0, 2.5])
 SRC = RM.Src()

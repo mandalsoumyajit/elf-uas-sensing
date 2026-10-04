@@ -19,8 +19,9 @@ def natural(f):          # AWESOME/Chrissan & Fraser-Smith: 1-100 fT/rtHz natura
     return 20e-15 * np.maximum(1.0, (300.0 / f) ** 1.5)    # Burch field ~8 fT/rtHz at 500 Hz; rise below 300 Hz
 def semi_urban(f):       # Zhou et al. 2024 mine-surface sites 0.38-3.14 pT/rtHz at 1 kHz; take 1 pT, ~1/f
     return np.maximum(natural(f), 1e-12 * (f / 1e3) ** -1.0)
-def indoor_lab(f):       # this work (grid data, G=1000 assumed): ~2 pT @600 Hz, 0.2-0.9 pT @3 kHz, 20-60 fT @8 kHz;
-    return np.maximum(np.maximum(natural(f), 30e-15), 2e-12 * (f / 600.0) ** -1.3)   # Virgo quiet indoor 10-100 pT @20-300 Hz
+def indoor_lab(f):       # this work: grid floor through the documented front end (review/FRONTEND_CALIBRATION_2026-10-04.md),
+    # geometric mean of the four channels: ~250 fT @600 Hz, ~160 fT @1.4 kHz, ~100 fT flat 3-9.4 kHz (assumed flat above)
+    return np.maximum(np.maximum(natural(f), 100e-15), 160e-15 * (f / 1375.0) ** -0.6)
 def indoor_noisy(f):     # Virgo: near racks/power supplies up to ~1000x quiet; take 30x
     return 30 * indoor_lab(f)
 SCEN = {'quiet outdoor': natural, 'semi-urban outdoor': semi_urban, 'indoor lab': indoor_lab, 'indoor near electronics': indoor_noisy}

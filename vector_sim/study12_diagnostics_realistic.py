@@ -14,7 +14,7 @@ from localization import unit_phasors
 from features import bandpass, covariance_features
 from simulation_utils import make_model, save_json, provenance
 
-OUT=Path('simulation_results/v6_realistic/diagnostics')
+OUT=Path('simulation_results/v7_calibrated/diagnostics')
 CFG=QuadrotorConfig(arm_length=0.11,motor_freqs_hz=153.477*(1+np.array([-0.03,0.0,0.035,0.07])),pole_pairs=7,m_rotating=1.06e-3/1.44,m_axial=1.06e-3,pwm_depth=0)
 FS=100000.; DUR=.2
 T=np.arange(int(FS*DUR))/FS
